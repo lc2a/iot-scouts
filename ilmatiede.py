@@ -23,7 +23,7 @@ parameters_str = parameters_str[:-1]
 
 url = "http://data.fmi.fi/fmi-apikey/{}/wfs?request=getFeature&storedquery_id={}&parameters={}&place={}".format(API_KEY,storedq_id,parameters_str,place)
 print(url)
-soup = BeautifulSoup(urllib.request.urlopen(url).read(), "html.parser")
+soup = BeautifulSoup(urllib.request.urlopen(url).read(), "lxml-xml")
 tmp = soup.find_all('wfs:member')
 
 tmptable = collections.defaultdict(dict)
