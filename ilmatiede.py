@@ -53,7 +53,7 @@ for parametercount in range(len(parameters)):
 for timecode, parameters in tmptable.items():
     telematrytable = {'values': parameters,'ts': timecode}
     print(telematrytable)
-    #r = requests.post('http://'+THINGSBOARD_HOST+':8080/api/v1/'+ACCESS_TOKEN+'/telemetry', data = json.dumps(telematrytable))
+    r = requests.post('http://'+THINGSBOARD_HOST+':8080/api/v1/'+ACCESS_TOKEN+'/telemetry', data = json.dumps(telematrytable))
 
 
 
