@@ -89,8 +89,9 @@ try:
     sensor_data['humidity'] = humidity
     sensor_data['air_pressure'] = air_pressure
 
-    # Sending humidity and temperature data to Thingsboard
-    client.publish('v1/devices/me/telemetry', json.dumps(sensor_data), 1)
+    if air_pressure > 10:
+      # Sending humidity and temperature data to Thingsboard
+      client.publish('v1/devices/me/telemetry', json.dumps(sensor_data), 1)
 
     next_reading += INTERVAL
     sleep_time = next_reading-time.time()
