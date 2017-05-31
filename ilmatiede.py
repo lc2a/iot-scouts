@@ -7,11 +7,17 @@ import json
 import requests
 import time
 import collections
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-api", help="API key for fmi open data",type=str, required=True)
+parser.add_argument("-p", help="place",type=str, required=True)
+parser.add_argument("-parser", help="place",type=str, default="lxml-xml")
+args = parser.parse_args()
 
-API_KEY = "c87db51d-6f6c-4b1a-8d90-076b32ccdf16"
+API_KEY = args.api
 storedq_id = "fmi::observations::weather::timevaluepair"
-place = "jyvaskyla"
+place = args.p
 parameters = ["temperature", "humidity", "pressure", "windspeedms"]
 
 #===========================================================
@@ -22,8 +28,9 @@ for parameter in parameters:
 parameters_str = parameters_str[:-1]
 
 url = "http://data.fmi.fi/fmi-apikey/{}/wfs?request=getFeature&storedquery_id={}&parameters={}&place={}".format(API_KEY,storedq_id,parameters_str,place)
-print(url)
-soup = BeautifulSoup(urllib.request.urlopen(url).read(), "lxml-xml")
+#print(url)
+soup = BeautifulSoup(urllib.request.urlopen(url).read(), args.parser)
+#print(soup)
 tmp = soup.find_all('wfs:member')
 
 tmptable = collections.defaultdict(dict)
@@ -45,17 +52,13 @@ for parametercount in range(len(parameters)):
     for point in currentparameter:
         d1 = datetime.datetime.strptime(point.find('wml2:time').string,"%Y-%m-%dT%H:%M:%SZ")
         unixtimecode = ConvertToTimezone(d1, 'Europe/Helsinki')
-        curparam = point.find('wml2:value').string
+        curparam = float(point.find('wml2:value').string)
         tmptable[unixtimecode].update({parameters[parametercount]: curparam})
 
         
 #print(tmptable)
 for timecode, parameters in tmptable.items():
-    telematrytable = {'values': parameters,'ts': timecode}
-    print(telematrytable)
-    r = requests.post('http://'+THINGSBOARD_HOST+':8080/api/v1/'+ACCESS_TOKEN+'/telemetry', data = json.dumps(telematrytable))
-
-
-
-
+    telemetrytable = {'values': parameters,'ts': timecode}
+    print(telemetrytable)
+    r = requests.post('http://'+THINGSBOARD_HOST+':8080/api/v1/'+ACCESS_TOKEN+'/telemetry', data = json.dumps(telemetrytable))
 
