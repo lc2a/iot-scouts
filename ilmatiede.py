@@ -13,11 +13,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-api", help="API key for fmi open data",type=str, required=True)
 parser.add_argument("-p", help="place",type=str, required=True)
 parser.add_argument("-parser", help="place",type=str, default="lxml-xml")
+parser.add_argument("-at", help="accesstoken for thingsboard",type=str, required=True)
+parser.add_argument("-tb", help="thingsboard ip",type=str, required=True)
+
 args = parser.parse_args()
 
 API_KEY = args.api
-storedq_id = "fmi::observations::weather::timevaluepair"
+THINGSBOARD_HOST = args.tb
+ACCESS_TOKEN = args.at
 place = args.p
+
+storedq_id = "fmi::observations::weather::timevaluepair"
 parameters = ["temperature", "humidity", "pressure", "windspeedms"]
 
 #===========================================================
@@ -36,8 +42,7 @@ tmp = soup.find_all('wfs:member')
 tmptable = collections.defaultdict(dict)
 
 
-THINGSBOARD_HOST = '192.168.51.140'
-ACCESS_TOKEN = 'SPiMjsHa1WuZEN9kRlAT' # This must be changed
+
 
 def ConvertToTimezone(timetoconvert, timezone):
     timezoneLocal = pytz.timezone(timezone)
@@ -61,4 +66,3 @@ for timecode, parameters in tmptable.items():
     telemetrytable = {'values': parameters,'ts': timecode}
     print(telemetrytable)
     r = requests.post('http://'+THINGSBOARD_HOST+':8080/api/v1/'+ACCESS_TOKEN+'/telemetry', data = json.dumps(telemetrytable))
-
