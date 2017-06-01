@@ -7,8 +7,33 @@ import time
 import sys
 import threading
 import netifaces as ni
+import argparse
+import codecs
+
+INTERVAL=30
 
 sense = SenseHat()
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-user", help="Username for MQTT broker",type=str, required=True)
+parser.add_argument("-passw", help="Password for MQTT broker",type=str, required=True)
+parser.add_argument("-ip", help="IP address of the MQTT broker",type=str, required=True)
+args = parser.parse_args()
+HOST = args.ip
+
+try:
+  with open('/sys/class/net/eth0/address') as f:
+    serialNumber = "raspi-"+codecs.encode(f.read().strip().replace(":", ""), "rot-13")
+except: 
+    print('Failed to read MAC address')
+
+def SendData(data):
+  global serialNumber, client
+  data['serialNumber'] = serialNumber
+  data['ip'] = getIp()
+  data['firmwarever'] = '0.2'
+  client.publish('raspi', json.dumps(data))
+
 
 def printPixels():
   X = [0, 255, 0]  # Green
@@ -40,27 +65,21 @@ while end-start < 30:
 sense.show_message(" OK ", text_colour=green)
 
 
-THINGSBOARD_HOST = '192.168.51.140'
-ACCESS_TOKEN = 'CE6CaB6wLYCVO8b7FwXL' # This must be changed
+def on_message(client, userdata, msg):
+    print(msg.topic+" "+str(msg.payload))
 
-# Data capture and upload interval in seconds. Less interval will eventually hang the DHT22.
-INTERVAL=30
 
-sensor_data = {'temperature': 0, 'humidity': 0, 'air_pressure': 0}
-
+sensor_data = {'temperature': 0, 'humidity': 0, 'pressure': 0}
 next_reading = time.time() 
-
 client = mqtt.Client()
-
+client.on_message = on_message
 # Set access token
-client.username_pw_set(ACCESS_TOKEN)
+client.username_pw_set(username=args.user,password=args.passw)
 
 # Connect to Thingsboard using default MQTT port and 60 seconds keepalive interval
-client.connect(THINGSBOARD_HOST, 1883, 60)
-
+client.connect(HOST, 1883, 60)
 client.loop_start()
-
-ip_address = {'ip': 0}
+client.subscribe('sensor/' + serialNumber + '/request/+/+')
 
 def getIp():
 # Try to get wlan0, otherwise eth0
@@ -71,11 +90,8 @@ def getIp():
   except:
     ni.ifaddresses('eth0')
     ip = ni.ifaddresses('eth0')[2][0]['addr']
-  print(ip)
-  ip_address['ip'] = ip
+  return ip
 
-  # Sending IP address
-  client.publish('v1/devices/me/attributes', json.dumps(ip_address), 1)
 
 try:
   count = 0
@@ -87,11 +103,10 @@ try:
     print(u"Temperature: {:g}\u00b0C, Humidity: {:g}%, Pressure: {}hpa".format(temperature, humidity, air_pressure))
     sensor_data['temperature'] = temperature
     sensor_data['humidity'] = humidity
-    sensor_data['air_pressure'] = air_pressure
-
+    sensor_data['pressure'] = air_pressure
     if air_pressure > 10:
-      # Sending humidity and temperature data to Thingsboard
-      client.publish('v1/devices/me/telemetry', json.dumps(sensor_data), 1)
+      #Sending humidity and temperature data to Thingsboard
+      SendData(sensor_data)
 
     next_reading += INTERVAL
     sleep_time = next_reading-time.time()
