@@ -104,7 +104,7 @@ try:
     sensor_data['temperature'] = temperature
     sensor_data['humidity'] = humidity
     sensor_data['pressure'] = air_pressure
-    if air_pressure > 10 and < 1500:
+    if 10 < air_pressure < 1500:
       #Sending humidity and temperature data to Thingsboard
       SendData(sensor_data)
 
