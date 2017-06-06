@@ -31,7 +31,7 @@ def SendData(data):
   global serialNumber, client
   data['serialNumber'] = serialNumber
   data['ip'] = getIp()
-  data['firmwarever'] = '0.2'
+  data['firmwarever'] = '0.25'
   client.publish('raspi', json.dumps(data))
 
 
@@ -56,70 +56,74 @@ def printPixels():
 red = (255, 0, 0)
 green = (0, 255, 0)
 
-print("Waiting for internet access...")
-start = time.time()
-end = time.time()
-while end-start < 30:
-  sense.show_message("Connecting...", text_colour=red)
-  end = time.time()
-sense.show_message(" OK ", text_colour=green)
-
-
-def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
-
-
-sensor_data = {'temperature': 0, 'humidity': 0, 'pressure': 0}
-next_reading = time.time() 
-client = mqtt.Client()
-client.on_message = on_message
-# Set access token
-client.username_pw_set(username=args.user,password=args.passw)
-
-# Connect to Thingsboard using default MQTT port and 60 seconds keepalive interval
-client.connect(HOST, 1883, 60)
-client.loop_start()
-client.subscribe('sensor/' + serialNumber + '/request/+/+')
-
-def getIp():
-# Try to get wlan0, otherwise eth0
-  global client
+while True:
   try:
-    ni.ifaddresses('wlan0')
-    ip = ni.ifaddresses('wlan0')[2][0]['addr']
-  except:
-    ni.ifaddresses('eth0')
-    ip = ni.ifaddresses('eth0')[2][0]['addr']
-  return ip
+    print("Waiting for internet access...")
+    start = time.time()
+    end = time.time()
+    while end-start < 30:
+      sense.show_message("Connecting...", text_colour=red)
+      end = time.time()
+    sense.show_message(" OK ", text_colour=green)
 
 
-try:
-  count = 0
-  while True:
-    printPixels()
-    humidity = round(sense.get_humidity(), 2)
-    temperature = round(sense.get_temperature(), 2)
-    air_pressure = round(sense.get_pressure(), 2)
-    print(u"Temperature: {:g}\u00b0C, Humidity: {:g}%, Pressure: {}hpa".format(temperature, humidity, air_pressure))
-    sensor_data['temperature'] = temperature
-    sensor_data['humidity'] = humidity
-    sensor_data['pressure'] = air_pressure
-    if 10 < air_pressure < 1500:
-      #Sending humidity and temperature data to Thingsboard
-      SendData(sensor_data)
+    def on_message(client, userdata, msg):
+        print(msg.topic+" "+str(msg.payload))
 
-    next_reading += INTERVAL
-    sleep_time = next_reading-time.time()
 
-    count += 1
-    if count > 10:
-      getIp()
+    sensor_data = {'temperature': 0, 'humidity': 0, 'pressure': 0}
+    next_reading = time.time() 
+    client = mqtt.Client()
+    client.on_message = on_message
+    # Set access token
+    client.username_pw_set(username=args.user,password=args.passw)
+
+    # Connect to Thingsboard using default MQTT port and 60 seconds keepalive interval
+    client.connect(HOST, 1883, 60)
+    client.loop_start()
+    client.subscribe('sensor/' + serialNumber + '/request/+/+')
+
+    def getIp():
+    # Try to get wlan0, otherwise eth0
+      global client
+      try:
+        ni.ifaddresses('wlan0')
+        ip = ni.ifaddresses('wlan0')[2][0]['addr']
+      except:
+        ni.ifaddresses('eth0')
+        ip = ni.ifaddresses('eth0')[2][0]['addr']
+      return ip
+
+
+    try:
       count = 0
+      while True:
+        printPixels()
+        humidity = round(sense.get_humidity(), 2)
+        temperature = round(sense.get_temperature(), 2)
+        air_pressure = round(sense.get_pressure(), 2)
+        print(u"Temperature: {:g}\u00b0C, Humidity: {:g}%, Pressure: {}hpa".format(temperature, humidity, air_pressure))
+        sensor_data['temperature'] = temperature
+        sensor_data['humidity'] = humidity
+        sensor_data['pressure'] = air_pressure
+        if 10 < air_pressure < 1500:
+          #Sending humidity and temperature data to Thingsboard
+          SendData(sensor_data)
 
-    if sleep_time > 0:
-      time.sleep(sleep_time)
-except KeyboardInterrupt:
-  pass
+        next_reading += INTERVAL
+        sleep_time = next_reading-time.time()
 
-client.loop_stop()
-client.disconnect()
+        count += 1
+        if count > 10:
+          getIp()
+          count = 0
+
+        if sleep_time > 0:
+          time.sleep(sleep_time)
+    except KeyboardInterrupt:
+      pass
+
+    client.loop_stop()
+    client.disconnect()
+  except:
+    print("Error, restarting")
