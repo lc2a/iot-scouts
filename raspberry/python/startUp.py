@@ -33,7 +33,7 @@ def SendData(data):
   data['ip'] = getIp()
   data['firmwarever'] = '0.25'
   client.publish('raspi', json.dumps(data))
-  f = open('/home/pi/data.json', 'w+')
+  f = open('/home/pi/data/data.json', 'w+')
   f.write(str(json.dumps(data)))
   f.close()
 
