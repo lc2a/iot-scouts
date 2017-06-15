@@ -33,9 +33,10 @@ def SendData(data):
   data['ip'] = getIp()
   data['firmwarever'] = '0.25'
   client.publish('raspi', json.dumps(data))
-  f = open('/home/pi/data/data.json', 'w+')
-  f.write(str(json.dumps(data)))
-  f.close()
+  if serialNumber == "raspi-o827ro544093":
+    f = open('/home/pi/data/data.json', 'w+')
+    f.write(str(json.dumps(data)))
+    f.close()
 
 
 def printPixels():
