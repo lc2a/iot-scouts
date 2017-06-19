@@ -132,3 +132,4 @@ while True:
     client.loop_stop()
     client.disconnect()
     print("Error, restarting")
+    print("Unexpected error:", sys.exc_info()[0])
