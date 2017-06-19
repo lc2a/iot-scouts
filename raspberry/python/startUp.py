@@ -129,4 +129,6 @@ while True:
     client.loop_stop()
     client.disconnect()
   except:
+    client.loop_stop()
+    client.disconnect()
     print("Error, restarting")
