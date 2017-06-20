@@ -33,9 +33,12 @@ def SendData(data):
   data['ip'] = getIp()
   data['firmwarever'] = '0.25'
   client.publish('raspi', json.dumps(data))
-  f = open('/home/pi/data/data.json', 'w+')
-  f.write(str(json.dumps(data)))
-  f.close()
+  try:
+    f = open('/home/pi/data/data.json', 'w+')
+    f.write(str(json.dumps(data)))
+    f.close()
+  except:
+      print("failed to save sensor data locally")
 
 
 def printPixels():
