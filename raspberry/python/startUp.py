@@ -9,6 +9,7 @@ import threading
 import netifaces as ni
 import argparse
 import codecs
+import subprocess
 
 INTERVAL=30
 
@@ -31,7 +32,7 @@ def SendData(data):
   global serialNumber, client
   data['serialNumber'] = serialNumber
   data['ip'] = getIp()
-  data['firmwarever'] = '0.25'
+  data['firmwarever'] = '0.35'
   client.publish('raspi', json.dumps(data))
   try:
     f = open('/home/pi/data/data.json', 'w+')
@@ -100,11 +101,17 @@ while True:
         ip = ni.ifaddresses('eth0')[2][0]['addr']
       return ip
 
+    def getCPUtemp():
+      temp = subprocess.getoutput("/opt/vc/bin/vcgencmd measure_temp")
+      temp = temp.replace("temp=", "")
+      temp = temp.replace("'C", "")
+      return temp
 
     try:
       count = 0
       while True:
         printPixels()
+        getCPUtemp()
         humidity = round(sense.get_humidity(), 2)
         temperature = round(sense.get_temperature(), 2)
         air_pressure = round(sense.get_pressure(), 2)
@@ -112,6 +119,8 @@ while True:
         sensor_data['temperature'] = temperature
         sensor_data['humidity'] = humidity
         sensor_data['pressure'] = air_pressure
+        sensor_data['CPUtemp'] = getCPUtemp()
+
         if 10 < air_pressure < 1500:
           #Sending humidity and temperature data to Thingsboard
           SendData(sensor_data)
