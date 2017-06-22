@@ -16,12 +16,9 @@ self.onDataUpdated = function() {
             var sum = 0;
             console.log(label);
             for (var i = 0; i < datapoints.length; i++) {
-                // Iterate over numeric indexes from 0 to 5, as everyone expects.
-                //console.log(datapoints[i]);
                 sum = sum + datapoints[i][1];
                 
             }
-            
             divi.innerHTML = divi.innerHTML + label + " avg: " + sum/datapoints.length+"<br>";
 
         }
