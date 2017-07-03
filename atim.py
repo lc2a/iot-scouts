@@ -48,13 +48,13 @@ for device in devices:
         attributes_to_db['longitude'] = device['longitude']
         attributes_to_db['latitude'] = device['latitude']
         attributes_to_db['devicename'] = device['devicename']
-        attributes_to_db['deviceid'] = device['deviceid']
+        attributes_to_db['serialNumber'] = "sig-{}".format(device['deviceid'])
         #send this to thingsboard as attributes
         print(attributes_to_db)
         for channeldata in channeldatas:
             values = {}
             values['temperature'] = channeldata['value']
-            values['deviceid'] = channeldata['deviceid']
+            values['serialNumber'] = "sig-{}".format(device['deviceid'])
             values_to_db = {'ts':convert2epoch(channeldata['time'], 'Europe/Helsinki'), 'values': values}
             #send this to thingsboard as telemetry
             print(values_to_db)
