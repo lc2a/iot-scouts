@@ -87,7 +87,7 @@ def on_message(client, userdata, msg):
 print("Waiting for internet access...")
 start = time.time()
 end = time.time()
-while end-start < 30:
+while end-start < 1:
 	sense.show_message("Connecting...", text_colour=red)
 	end = time.time()
 sense.show_message(" OK ", text_colour=green)
