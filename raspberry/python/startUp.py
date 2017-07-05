@@ -67,11 +67,11 @@ def getIp():
 # Try to get wlan0, otherwise eth0
 	global client
 	try:
-	    ni.ifaddresses('eth0')
-		ip = ni.ifaddresses('eth0')[2][0]['addr']
+        ni.ifaddresses('eth0')
+        ip = ni.ifaddresses('eth0')[2][0]['addr']
 	except:
-		ni.ifaddresses('wlan0')
-		ip = ni.ifaddresses('wlan0')[2][0]['addr']
+        ni.ifaddresses('wlan0')
+        ip = ni.ifaddresses('wlan0')[2][0]['addr']
 	return ip
 
 def getCPUtemp():
