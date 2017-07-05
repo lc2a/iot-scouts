@@ -80,31 +80,30 @@ def getCPUtemp():
 	temp = temp.replace("'C", "")
 	return temp
 
-
-    print("Waiting for internet access...")
-    start = time.time()
-    end = time.time()
-    while end-start < 30:
-        sense.show_message("Connecting...", text_colour=red)
-        end = time.time()
-    sense.show_message(" OK ", text_colour=green)
+def on_message(client, userdata, msg):
+	print(msg.topic+" "+str(msg.payload))
 
 
-    def on_message(client, userdata, msg):
-        print(msg.topic+" "+str(msg.payload))
+print("Waiting for internet access...")
+start = time.time()
+end = time.time()
+while end-start < 30:
+	sense.show_message("Connecting...", text_colour=red)
+	end = time.time()
+sense.show_message(" OK ", text_colour=green)
 
 
-    sensor_data = {'temperature': 0, 'humidity': 0, 'pressure': 0}
-    next_reading = time.time() 
-    client = mqtt.Client()
-    client.on_message = on_message
-    # Set access token
-    client.username_pw_set(username=args.user,password=args.passw)
+sensor_data = {'temperature': 0, 'humidity': 0, 'pressure': 0}
+next_reading = time.time() 
+client = mqtt.Client()
+client.on_message = on_message
+# Set access token
+client.username_pw_set(username=args.user,password=args.passw)
 
-    # Connect to Thingsboard using default MQTT port and 60 seconds keepalive interval
-    client.connect(HOST, 1883, 60)
-    client.loop_start()
-    client.subscribe('sensor/' + serialNumber + '/request/+/+')
+# Connect to Thingsboard using default MQTT port and 60 seconds keepalive interval
+client.connect(HOST, 1883, 60)
+client.loop_start()
+client.subscribe('sensor/' + serialNumber + '/request/+/+')
 
 try:
 	count = 0
