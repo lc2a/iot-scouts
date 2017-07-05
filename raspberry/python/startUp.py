@@ -72,7 +72,7 @@ def getIp():
 	except:
 		ni.ifaddresses('eth0')
 		ip = ni.ifaddresses('eth0')[2][0]['addr']
-		return ip
+	return ip
 
 def getCPUtemp():
 	temp = subprocess.getoutput("/opt/vc/bin/vcgencmd measure_temp")
