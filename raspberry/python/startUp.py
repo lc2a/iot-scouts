@@ -64,13 +64,12 @@ red = (255, 0, 0)
 green = (0, 255, 0)
 
 while True:
-  try:
     print("Waiting for internet access...")
     start = time.time()
     end = time.time()
     while end-start < 30:
-      sense.show_message("Connecting...", text_colour=red)
-      end = time.time()
+        sense.show_message("Connecting...", text_colour=red)
+        end = time.time()
     sense.show_message(" OK ", text_colour=green)
 
 
@@ -92,24 +91,24 @@ while True:
 
     def getIp():
     # Try to get wlan0, otherwise eth0
-      global client
-      try:
+        global client
+        try:
         ni.ifaddresses('wlan0')
         ip = ni.ifaddresses('wlan0')[2][0]['addr']
-      except:
+        except:
         ni.ifaddresses('eth0')
         ip = ni.ifaddresses('eth0')[2][0]['addr']
-      return ip
+        return ip
 
     def getCPUtemp():
-      temp = subprocess.getoutput("/opt/vc/bin/vcgencmd measure_temp")
-      temp = temp.replace("temp=", "")
-      temp = temp.replace("'C", "")
-      return temp
+        temp = subprocess.getoutput("/opt/vc/bin/vcgencmd measure_temp")
+        temp = temp.replace("temp=", "")
+        temp = temp.replace("'C", "")
+        return temp
 
     try:
-      count = 0
-      while True:
+        count = 0
+        while True:
         printPixels()
         getCPUtemp()
         humidity = round(sense.get_humidity(), 2)
@@ -122,26 +121,21 @@ while True:
         sensor_data['CPUtemp'] = getCPUtemp()
 
         if 10 < air_pressure < 1500:
-          #Sending humidity and temperature data to Thingsboard
-          SendData(sensor_data)
+            #Sending humidity and temperature data to Thingsboard
+            SendData(sensor_data)
 
         next_reading += INTERVAL
         sleep_time = next_reading-time.time()
 
         count += 1
         if count > 10:
-          getIp()
-          count = 0
+            getIp()
+            count = 0
 
         if sleep_time > 0:
-          time.sleep(sleep_time)
+            time.sleep(sleep_time)
     except KeyboardInterrupt:
-      pass
+        pass
 
-    client.loop_stop()
-    client.disconnect()
-  except:
-    client.loop_stop()
-    client.disconnect()
-    print("Error, restarting")
-    print("Unexpected error:", sys.exc_info()[0])
+client.loop_stop()
+client.disconnect()
