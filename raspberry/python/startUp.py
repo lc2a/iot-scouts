@@ -108,31 +108,31 @@ client.subscribe('sensor/' + serialNumber + '/request/+/+')
 try:
 	count = 0
 	while True:
-	printPixels()
-	getCPUtemp()
-	humidity = round(sense.get_humidity(), 2)
-	temperature = round(sense.get_temperature(), 2)
-	air_pressure = round(sense.get_pressure(), 2)
-	print(u"Temperature: {:g}\u00b0C, Humidity: {:g}%, Pressure: {}hpa".format(temperature, humidity, air_pressure))
-	sensor_data['temperature'] = temperature
-	sensor_data['humidity'] = humidity
-	sensor_data['pressure'] = air_pressure
-	sensor_data['CPUtemp'] = getCPUtemp()
+		printPixels()
+		getCPUtemp()
+		humidity = round(sense.get_humidity(), 2)
+		temperature = round(sense.get_temperature(), 2)
+		air_pressure = round(sense.get_pressure(), 2)
+		print(u"Temperature: {:g}\u00b0C, Humidity: {:g}%, Pressure: {}hpa".format(temperature, humidity, air_pressure))
+		sensor_data['temperature'] = temperature
+		sensor_data['humidity'] = humidity
+		sensor_data['pressure'] = air_pressure
+		sensor_data['CPUtemp'] = getCPUtemp()
 
-	if 10 < air_pressure < 1500:
-		#Sending humidity and temperature data to Thingsboard
-		SendData(sensor_data)
+		if 10 < air_pressure < 1500:
+			#Sending humidity and temperature data to Thingsboard
+			SendData(sensor_data)
 
-	next_reading += INTERVAL
-	sleep_time = next_reading-time.time()
+		next_reading += INTERVAL
+		sleep_time = next_reading-time.time()
 
-	count += 1
-	if count > 10:
-		getIp()
-		count = 0
+		count += 1
+		if count > 10:
+			getIp()
+			count = 0
 
-	if sleep_time > 0:
-		time.sleep(sleep_time)
+		if sleep_time > 0:
+			time.sleep(sleep_time)
 except KeyboardInterrupt:
 	pass
 
