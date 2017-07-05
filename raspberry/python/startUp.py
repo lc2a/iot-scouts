@@ -23,47 +23,64 @@ args = parser.parse_args()
 HOST = args.ip
 
 try:
-  with open('/sys/class/net/eth0/address') as f:
-    serialNumber = "raspi-"+codecs.encode(f.read().strip().replace(":", ""), "rot-13")
+	with open('/sys/class/net/eth0/address') as f:
+		serialNumber = "raspi-"+codecs.encode(f.read().strip().replace(":", ""), "rot-13")
 except: 
     print('Failed to read MAC address')
 
 def SendData(data):
-  global serialNumber, client
-  data['serialNumber'] = serialNumber
-  data['ip'] = getIp()
-  data['firmwarever'] = '0.35'
-  client.publish('raspi', json.dumps(data))
-  try:
-    f = open('/home/pi/data/data.json', 'w+')
-    f.write(str(json.dumps(data)))
-    f.close()
-  except:
-      print("failed to save sensor data locally")
+	global serialNumber, client
+	data['serialNumber'] = serialNumber
+	data['ip'] = getIp()
+	data['firmwarever'] = '0.35'
+	client.publish('raspi', json.dumps(data))
+	try:
+		f = open('/home/pi/data/data.json', 'w+')
+		f.write(str(json.dumps(data)))
+		f.close()
+	except:
+		print("failed to save sensor data locally")
 
 
 def printPixels():
-  X = [0, 255, 0]  # Green
-  O = [0, 0, 0] # White
+	X = [0, 255, 0]  # Green
+	O = [0, 0, 0] # White
 
-  pixel_fin = [
-  X, O, O, O, O, O, O, X,
-  O, O, O, O, O, O, O, O,
-  O, O, O, O, O, O, O, O,
-  O, O, O, X, X, O, O, O,
-  O, O, O, X, X, O, O, O,
-  O, O, O, O, O, O, O, O,
-  O, O, O, O, O, O, O, O,
-  X, O, O, O, O, O, O, X
-  ]
-  sense.set_pixels(pixel_fin)
-  time.sleep(2)
-  sense.clear()
+	pixel_fin = [
+	X, O, O, O, O, O, O, X,
+	O, O, O, O, O, O, O, O,
+	O, O, O, O, O, O, O, O,
+	O, O, O, X, X, O, O, O,
+	O, O, O, X, X, O, O, O,
+	O, O, O, O, O, O, O, O,
+	O, O, O, O, O, O, O, O,
+	X, O, O, O, O, O, O, X
+	]
+	sense.set_pixels(pixel_fin)
+	time.sleep(2)
+	sense.clear()
 
 red = (255, 0, 0)
 green = (0, 255, 0)
 
-while True:
+def getIp():
+# Try to get wlan0, otherwise eth0
+	global client
+	try:
+		ni.ifaddresses('wlan0')
+		ip = ni.ifaddresses('wlan0')[2][0]['addr']
+	except:
+		ni.ifaddresses('eth0')
+		ip = ni.ifaddresses('eth0')[2][0]['addr']
+		return ip
+
+def getCPUtemp():
+	temp = subprocess.getoutput("/opt/vc/bin/vcgencmd measure_temp")
+	temp = temp.replace("temp=", "")
+	temp = temp.replace("'C", "")
+	return temp
+
+
     print("Waiting for internet access...")
     start = time.time()
     end = time.time()
@@ -89,53 +106,36 @@ while True:
     client.loop_start()
     client.subscribe('sensor/' + serialNumber + '/request/+/+')
 
-    def getIp():
-    # Try to get wlan0, otherwise eth0
-        global client
-        try:
-            ni.ifaddresses('wlan0')
-            ip = ni.ifaddresses('wlan0')[2][0]['addr']
-        except:
-            ni.ifaddresses('eth0')
-            ip = ni.ifaddresses('eth0')[2][0]['addr']
-            return ip
+try:
+	count = 0
+	while True:
+	printPixels()
+	getCPUtemp()
+	humidity = round(sense.get_humidity(), 2)
+	temperature = round(sense.get_temperature(), 2)
+	air_pressure = round(sense.get_pressure(), 2)
+	print(u"Temperature: {:g}\u00b0C, Humidity: {:g}%, Pressure: {}hpa".format(temperature, humidity, air_pressure))
+	sensor_data['temperature'] = temperature
+	sensor_data['humidity'] = humidity
+	sensor_data['pressure'] = air_pressure
+	sensor_data['CPUtemp'] = getCPUtemp()
 
-    def getCPUtemp():
-        temp = subprocess.getoutput("/opt/vc/bin/vcgencmd measure_temp")
-        temp = temp.replace("temp=", "")
-        temp = temp.replace("'C", "")
-        return temp
+	if 10 < air_pressure < 1500:
+		#Sending humidity and temperature data to Thingsboard
+		SendData(sensor_data)
 
-    try:
-        count = 0
-        while True:
-        printPixels()
-        getCPUtemp()
-        humidity = round(sense.get_humidity(), 2)
-        temperature = round(sense.get_temperature(), 2)
-        air_pressure = round(sense.get_pressure(), 2)
-        print(u"Temperature: {:g}\u00b0C, Humidity: {:g}%, Pressure: {}hpa".format(temperature, humidity, air_pressure))
-        sensor_data['temperature'] = temperature
-        sensor_data['humidity'] = humidity
-        sensor_data['pressure'] = air_pressure
-        sensor_data['CPUtemp'] = getCPUtemp()
+	next_reading += INTERVAL
+	sleep_time = next_reading-time.time()
 
-        if 10 < air_pressure < 1500:
-            #Sending humidity and temperature data to Thingsboard
-            SendData(sensor_data)
+	count += 1
+	if count > 10:
+		getIp()
+		count = 0
 
-        next_reading += INTERVAL
-        sleep_time = next_reading-time.time()
-
-        count += 1
-        if count > 10:
-            getIp()
-            count = 0
-
-        if sleep_time > 0:
-            time.sleep(sleep_time)
-    except KeyboardInterrupt:
-        pass
+	if sleep_time > 0:
+		time.sleep(sleep_time)
+except KeyboardInterrupt:
+	pass
 
 client.loop_stop()
 client.disconnect()
