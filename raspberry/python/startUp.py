@@ -74,6 +74,9 @@ def getIp():
     ip = ni.ifaddresses('eth0')[2][0]['addr']
     return ip
 
+def hex2rgb(hexv):
+    return (int(hexv[1:3], 16),int(hexv[3:5], 16),int(hexv[5:7], 16))
+
 def getCPUtemp():
   temp = subprocess.getoutput("/opt/vc/bin/vcgencmd measure_temp")
   temp = temp.replace("temp=", "")
@@ -83,9 +86,11 @@ def getCPUtemp():
 def on_message(client, userdata, msg):
   print(msg.topic+" "+str(msg.payload))
   payload = json.loads(msg.payload.decode("utf-8"))
-  sense.show_message(payload['message'], text_colour=red)
   if (payload['message'] == 'Brightness'):
     sense.low_light = (not sense.low_light)
+  else:
+    sense.show_message(payload['message'][:20], text_colour=hex2rgb(payload['color']))
+
 
 
 print("Waiting for internet access...")
