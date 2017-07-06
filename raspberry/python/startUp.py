@@ -84,7 +84,7 @@ def on_message(client, userdata, msg):
   print(msg.topic+" "+str(msg.payload))
   payload = json.loads(msg.payload.decode("utf-8"))
   sense.show_message(payload['message'], text_colour=red)
-  if (payload['message'] == 'LowLight'):
+  if (payload['message'] == 'Brightness'):
     sense.low_light = (not sense.low_light)
 
 
