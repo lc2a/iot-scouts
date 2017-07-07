@@ -72,7 +72,7 @@ def getIp():
   except:
     ni.ifaddresses('eth0')
     ip = ni.ifaddresses('eth0')[2][0]['addr']
-    return ip
+  return ip
 
 def hex2rgb(hexv):
     return (int(hexv[1:3], 16),int(hexv[3:5], 16),int(hexv[5:7], 16))
