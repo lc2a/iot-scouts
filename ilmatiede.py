@@ -34,9 +34,7 @@ for parameter in parameters:
 parameters_str = parameters_str[:-1]
 
 url = "http://data.fmi.fi/fmi-apikey/{}/wfs?request=getFeature&storedquery_id={}&parameters={}&place={}".format(API_KEY,storedq_id,parameters_str,place)
-#print(url)
 soup = BeautifulSoup(urllib.request.urlopen(url).read(), args.parser)
-#print(soup)
 tmp = soup.find_all('wfs:member')
 
 tmptable = collections.defaultdict(dict)
@@ -52,7 +50,6 @@ def ConvertToTimezone(timetoconvert, timezone):
 
 
 for parametercount in range(len(parameters)):
-    #print(parameters[parametercount])
     currentparameter = tmp[parametercount].find_all('wml2:point')
     for point in currentparameter:
         d1 = datetime.datetime.strptime(point.find('wml2:time').string,"%Y-%m-%dT%H:%M:%SZ")
@@ -61,7 +58,6 @@ for parametercount in range(len(parameters)):
         tmptable[unixtimecode].update({parameters[parametercount]: curparam})
 
         
-#print(tmptable)
 for timecode, parameters in tmptable.items():
     telemetrytable = {'values': parameters,'ts': timecode}
     print(telemetrytable)
