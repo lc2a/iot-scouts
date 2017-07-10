@@ -8,6 +8,8 @@ import argparse
 import codecs
 from ruuvitag_sensor.ruuvi import RuuviTagSensor
 
+INTERVAL = 30
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-user", help="Username for MQTT broker",type=str, required=True)
@@ -17,7 +19,6 @@ parser.add_argument("-mac", help="Ruuvitag's MAC address",type=str, required=Tru
 args = parser.parse_args()
 HOST = args.ip
 mac = args.mac
-INTERVAL = 30
 sensor = RuuviTagSensor(mac)
 
 def checkdata(data):
@@ -52,11 +53,11 @@ def checkalert(data, alertmode):
 
 while True:
   try:
+    print("starting...")
     time.sleep(20)
     alertmode = False
     sensor_data = {}
     data = sensor.update()
-    print(data)
     client = mqtt.Client()
     client.username_pw_set(username=args.user,password=args.passw)
     client.connect(HOST, 1883, 60)
@@ -82,7 +83,7 @@ while True:
     client.loop_stop()
     client.disconnect()
   except:
-    print("restarting...", sys.exc_info()[0])
+    print("unexpected error: ", sys.exc_info()[0])
     client.loop_stop()
     client.disconnect()
     

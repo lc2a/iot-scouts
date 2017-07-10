@@ -1,0 +1,23 @@
+{
+  "alias": "google_chart",
+  "name": "google-chart",
+  "descriptor": {
+    "type": "timeseries",
+    "sizeX": 9,
+    "sizeY": 4.5,
+    "resources": [
+      {
+        "url": "https://www.gstatic.com/charts/loader.js"
+      },
+      {
+        "url": ""
+      }
+    ],
+    "templateHtml": " <div id=\"chart_div\"></div>\n",
+    "templateCss": ".legend {\n    font-size: 13px;\n    line-height: 10px;\n}\n\n.legend table { \n    border-spacing: 0px;\n    border-collapse: separate;\n}\n\n.mouse-events .flot-overlay {\n    cursor: crosshair; \n}\n\n",
+    "controllerScript": "self.drawChart = function (data) {\n\n    // Set chart options\n    var options = {\n        title: 'Google line chart widget',\n        curveType: 'function',\n        legend: { position: 'bottom' }\n    };\n\n    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));\n\n    chart.draw(data, options);\n}\n\nself.onInit = function () {\n    self.ready = false;\n    google.charts.load('current', { 'packages': ['corechart'] });\n    google.charts.setOnLoadCallback(self.drawChart2);\n\n}\n\nself.drawChart2 = function () {\n    self.ready = true;\n}\n\n\nself.GoogleChartConvert = function () {\n\n    var subs = self.ctx.subscriptions;\n    var labels = [\"time\"];\n    var values = {};\n    console.log(subs);\n    Object.keys(subs).forEach(function (key) {\n        var datasources = subs[key].data;\n        console.log(datasources.length);\n        for (var ii = 0; ii < datasources.length; ii++) {\n            var label = subs[key].data[ii].dataKey[\"label\"];\n            labels.push(label);\n            var datapoints = subs[key].data[ii].data;\n            //console.log(label);\n            for (var i = 0; i < datapoints.length; i++) {\n\n                //console.log(datapoints[i]);\n                var time = datapoints[i][0];\n                var value = datapoints[i][1];\n                if (typeof values[time] == \"undefined\") {\n                    values[time] = [value, null];\n                }\n                else {\n                    values[time][1] = value;\n                }\n\n            }\n        }\n    });\n    //console.log(\"values: \", values);\n    //console.log(\"labels: \", labels);\n    var googleArray = [labels];\n    var temp = [];\n    var key;\n    for (key in values) {\n        temp = values[key];\n        temp.unshift(key);\n        googleArray.push(temp);\n        //console.log(value);\n    }\n    console.log(googleArray);\n\n    return googleArray;\n}\n\n\n\nself.onDataUpdated = function () {\n\n    var data = self.GoogleChartConvert();\n    if (self.ready)\n    {\n        self.drawChart(google.visualization.arrayToDataTable(data));\n    }\n\n}\n\n\n",
+    "settingsSchema": "{}",
+    "dataKeySettingsSchema": "{}",
+    "defaultConfig": "{\"datasources\":[{\"type\":\"function\",\"name\":\"function\",\"dataKeys\":[{\"name\":\"f(x)\",\"type\":\"function\",\"label\":\"First\",\"color\":\"#2196f3\",\"settings\":{\"showLines\":true,\"fillLines\":true,\"showPoints\":false},\"_hash\":0.8587686344902596,\"funcBody\":\"var value = prevValue + Math.random() * 100 - 50;\\nvar multiplier = Math.pow(10, 2 || 0);\\nvar value = Math.round(value * multiplier) / multiplier;\\nif (value < -1000) {\\n\\tvalue = -1000;\\n} else if (value > 1000) {\\n\\tvalue = 1000;\\n}\\nreturn value;\"},{\"name\":\"f(x)\",\"type\":\"function\",\"label\":\"Second\",\"color\":\"#ffc107\",\"settings\":{\"showLines\":true,\"fillLines\":false,\"showPoints\":false},\"_hash\":0.12775350966079668,\"funcBody\":\"var value = prevValue + Math.random() * 100 - 50;\\nvar multiplier = Math.pow(10, 2 || 0);\\nvar value = Math.round(value * multiplier) / multiplier;\\nif (value < -1000) {\\n\\tvalue = -1000;\\n} else if (value > 1000) {\\n\\tvalue = 1000;\\n}\\nreturn value;\"}]}],\"timewindow\":{\"realtime\":{\"timewindowMs\":60000}},\"showTitle\":true,\"backgroundColor\":\"#fff\",\"color\":\"rgba(0, 0, 0, 0.87)\",\"padding\":\"8px\",\"settings\":{},\"title\":\"google-chart\",\"dropShadow\":true,\"enableFullscreen\":true,\"titleStyle\":{\"fontSize\":\"16px\",\"fontWeight\":400},\"mobileHeight\":null,\"useDashboardTimewindow\":true,\"showLegend\":false}"
+  }
+}
