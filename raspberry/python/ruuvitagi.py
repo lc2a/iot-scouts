@@ -18,12 +18,10 @@ args = parser.parse_args()
 HOST = args.ip
 mac = args.mac
 INTERVAL = 30
+sensor = RuuviTagSensor(mac)
 
 def checkdata(data):
-  good_data = False
-  if (-60 < data['temperature'] < 60) and (0 <= data['humidity'] <= 100) and (500 < data['pressure'] < 1500):
-    good_data = True
-  return good_data
+  return (-60 < data['temperature'] < 60) and (0 <= data['humidity'] <= 100) and (500 < data['pressure'] < 1500)
 
 def SendData(data, topic, alert = False):
   global client
@@ -54,9 +52,9 @@ def checkalert(data, alertmode):
 
 while True:
   try:
+    time.sleep(20)
     alertmode = False
     sensor_data = {}
-    sensor = RuuviTagSensor(mac)
     data = sensor.update()
     print(data)
     client = mqtt.Client()
@@ -84,5 +82,7 @@ while True:
     client.loop_stop()
     client.disconnect()
   except:
-    print("restarting...")
-
+    print("restarting...", sys.exc_info()[0])
+    client.loop_stop()
+    client.disconnect()
+    
