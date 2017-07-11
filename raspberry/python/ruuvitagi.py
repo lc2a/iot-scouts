@@ -10,7 +10,6 @@ from ruuvitag_sensor.ruuvi import RuuviTagSensor
 
 INTERVAL = 30
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-user", help="Username for MQTT broker",type=str, required=True)
 parser.add_argument("-passw", help="Password for MQTT broker",type=str, required=True)
@@ -20,49 +19,43 @@ args = parser.parse_args()
 HOST = args.ip
 mac = args.mac
 sensor = RuuviTagSensor(mac)
+running = True
 
+#filter out bad readings
 def checkdata(data):
-  return (-60 < data['temperature'] < 60) and (0 <= data['humidity'] <= 100) and (500 < data['pressure'] < 1500)
+  return (-100 < data['temperature'] < 100) and (0 <= data['humidity'] <= 100) and (500 < data['pressure'] < 1500)
 
-def SendData(data, topic, alert = False):
+def senddata(data, topic):
   global client
   data['serialNumber'] = "ruuvitag-{}".format(mac.replace(":",""))
-  if not alert:
-    data['ip'] = mac
-    data['firmwarever'] = '0.2'
+  data['ip'] = mac
+  data['firmwarever'] = '0.3'
   print("SENDING DATA ", data)
 
   client.publish(topic, json.dumps(data))
 
-def checkalert(data, alertmode):
-  if data['acceleration'] > 1400:
-    print("acc is over 1400")
-    data2 = {}
-    alertmode = True
-    data2['alertstr'] = "Alert!: acceleration is {:.2f}".format(data['acceleration'])
-    SendData(data2, "alert", True)
+#ignores interval setting if certain limit are crossed
+def checkalert(data):
+  return (data['acceleration'] > 1400) or (data['temperature'] > 90)
 
-  elif (data['acceleration'] < 1400) and (alertmode == True):
-    data2 = {}
-    alertmode = False
-    data2['alertstr'] = "Acceleration is back to normal"
-    SendData(data2, "alert", True)
+def closeconnection():
+  global client
+  client.loop_stop()
+  client.disconnect()
+  return False
 
-  return alertmode
-
-
-while True:
+while running:
   try:
     print("starting...")
-    time.sleep(20)
+    time.sleep(10)
     alertmode = False
     sensor_data = {}
-    data = sensor.update()
     client = mqtt.Client()
     client.username_pw_set(username=args.user,password=args.passw)
     client.connect(HOST, 1883, 60)
     client.loop_start()
     sendtime = 0
+
     while True:
       data = sensor.update()
       sensor_data['temperature'] = data['temperature']
@@ -71,17 +64,16 @@ while True:
       sensor_data['acceleration'] = data['acceleration']
       sensor_data['battery'] = data['battery']
 
-      if sendtime+INTERVAL < time.time():
+      if (sendtime+INTERVAL < time.time()) or (checkalert(sensor_data)):
         if checkdata(sensor_data):
-            SendData(sensor_data, "ruuvi")
+            senddata(sensor_data, "ruuvi")
             sendtime = time.time()
-
-      alertmode = checkalert(sensor_data, alertmode) 
 
       time.sleep(2)
 
-    client.loop_stop()
-    client.disconnect()
+  except (KeyboardInterrupt, SystemExit):
+    print("closing")
+    running = closeconnection()
   except:
     print("unexpected error: ", sys.exc_info()[0])
     client.loop_stop()
