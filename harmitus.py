@@ -23,6 +23,7 @@ url = "http://192.168.51.159:8080/harmitus/{}".format(datestr)
 r = requests.get(url)
 data = r.json()
 
+
 for harmitus in data:
     newdata = {}
     newdata['values'] = {}
