@@ -74,11 +74,8 @@ self.GoogleChartConvert = function () {
 self.onDataUpdated = function () {
 
     var data = self.GoogleChartConvert();
-    if (self.ready)
-    {
+    if (self.ready) {
         self.drawChart(google.visualization.arrayToDataTable(data));
     }
 
 }
-
-
