@@ -4,3 +4,6 @@
 
 ### Go to [our wiki site!](https://cybertrust.labranet.jamk.fi/cf2017/iot-scouts/wikis/home)
 
+## IoT Scouts:
+* [Lauri Korte](https://www.linkedin.com/in/kortelauri/), IoT Developer
+* [Antti Tuovinen](https://www.linkedin.com/in/anttuov/), Junior IoT Developer
