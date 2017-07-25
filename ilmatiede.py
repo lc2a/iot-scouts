@@ -8,6 +8,8 @@ import requests
 import time
 import collections
 import argparse
+from operator import itemgetter
+from collections import OrderedDict
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-api", help="API key for fmi open data",type=str, required=True)
@@ -40,8 +42,6 @@ tmp = soup.find_all('wfs:member')
 tmptable = collections.defaultdict(dict)
 
 
-
-
 def ConvertToTimezone(timetoconvert, timezone):
     timezoneLocal = pytz.timezone(timezone)
     utc = pytz.utc
@@ -57,8 +57,10 @@ for parametercount in range(len(parameters)):
         curparam = float(point.find('wml2:value').string)
         tmptable[unixtimecode].update({parameters[parametercount]: curparam})
 
-        
-for timecode, parameters in tmptable.items():
-    telemetrytable = {'values': parameters,'ts': timecode}
+
+sorted_table = OrderedDict(sorted(tmptable.items(), key=itemgetter(0)))
+
+for timecode, parameters in sorted_table.items():
+    telemetrytable = {'values': parameters,'ts': int(timecode)}
     print(telemetrytable)
     r = requests.post('http://'+THINGSBOARD_HOST+':8080/api/v1/'+ACCESS_TOKEN+'/telemetry', data = json.dumps(telemetrytable))
