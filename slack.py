@@ -8,6 +8,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-u", help="Thingsboard username", type=str, required=True)
 parser.add_argument("-p", help="Thingsboard password", type=str, required=True)
 parser.add_argument("-t", help="Slack token", type=str, default=True)
+
+thingsboard_ip = "192.168.51.108"
 args = parser.parse_args()
 device_ids = {}
 device_ids["ruuvitag"] = ["6a46de80-4aa8-11e7-a8f9-c53cc0543175",
@@ -19,7 +21,7 @@ device_ids["sensehat"] = ["8990d510-3faa-11e7-a809-c53cc0543175", "8e4de7f0-3faa
 def get_temp(device_name):
     global args, device_ids
 
-    auth_url = "http://192.168.51.140:8080/api/auth/login"
+    auth_url = "http://"+thingsboard_ip+":8080/api/auth/login"
     headers = {'Content-Type': 'application/json'}
     r = requests.post(auth_url, headers=headers,
                       data='{"username":"' + args.u + '", "password":"' + args.p + '"}')
@@ -36,7 +38,7 @@ def get_temp(device_name):
         stringit = stringit[:-2]
     elif device_name.lower() in device_ids.keys():
         for device_id in device_ids[device_name.lower()]:
-            url = "http://192.168.51.140:8080/api/plugins/telemetry/{}/values/timeseries?keys=temperature".format(
+            url = "http://"+thingsboard_ip+":8080/api/plugins/telemetry/{}/values/timeseries?keys=temperature".format(
                 device_id)
             r = requests.get(url, headers=headers)
             print(r.text)
